@@ -1,33 +1,15 @@
-import requests
-import json
-import lxml
-from bs4 import BeautifulSoup
-import selenium
 import pandas as pd
-from sklearn.utils import resample
-from sklearn.preprocessing import StandardScaler
-import numpy as np
-import matplotlib.pyplot as plt
-from joblib import dump, load
-from imblearn.over_sampling import SMOTE
-from sklearn.model_selection import train_test_split
 from selenium import webdriver
-from lxml import etree
-from selenium.webdriver.firefox.options import Options
-from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.common.by import By
 from datetime import datetime
 from dateutil.relativedelta import relativedelta
-
 from bs4 import BeautifulSoup
-from selenium.webdriver import ActionChains
 import time
 from selenium.webdriver.chrome.service import Service
-import copy
 
 ser = Service(executable_path="C:\chromedriver.exe")
-headless = False
-ec2 = False
+headless = 'ec2'
+ec2 = True
 chrome_options = webdriver.ChromeOptions()
 # chrome_options.add_argument("--headless")
 if ec2:
@@ -45,16 +27,16 @@ elif headless == 'ec2':
     pass
 else:
     chrome_options.add_argument("--start-maximized")
-with_exp = 'with_exp.csv'
-without_exp = 'without_exp.csv'
+with_exp = 'validate_with_xg.csv'
+without_exp = 'validate_without_xg.csv'
 match_records = []
 url = ''
-start = datetime(2021, 5, 1)
+start = datetime(2022, 4, 15)
 date = start
 # max_retries = 3
 num_of_retries = 0
 max_time = 20
-for i in range(365):
+for i in range(35):
     month = ''
     day = ''
     date = date + relativedelta(days=1)
