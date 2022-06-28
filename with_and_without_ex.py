@@ -24,16 +24,27 @@ from selenium.webdriver import ActionChains
 import time
 from selenium.webdriver.chrome.service import Service
 ser = Service(executable_path="C:\chromedriver.exe")
-headless = True
+headless = False
+ec2 = False
 chrome_options = webdriver.ChromeOptions()
 # chrome_options.add_argument("--headless")
+if ec2:
+    chrome_options.add_argument("--headless")
+    chrome_options.add_argument("--disable-gpu")
+    chrome_options.add_argument("--no-sandbox")
+    chrome_options.add_argument("enable-automation")
+    chrome_options.add_argument("--disable-infobars")
+    chrome_options.add_argument("--disable-dev-shm-usage")
 
 if headless:
     chrome_options.add_argument('--headless')
     chrome_options.add_argument("--window-size=1920,1080")
+elif headless == 'ec2':
+    pass
 else:
     chrome_options.add_argument("--start-maximized")
-fooball_data = 'fooball_data.csv'
+with_exp = 'with_exp.csv'
+without_exp = 'without_exp.csv'
 match_records = []
 url = ''
 start = datetime(2022, 4, 22)
