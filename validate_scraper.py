@@ -19,6 +19,7 @@ if ec2:
     chrome_options.add_argument("enable-automation")
     chrome_options.add_argument("--disable-infobars")
     chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--window-size=1920,1080")
 
 if headless:
     chrome_options.add_argument('--headless')
@@ -27,11 +28,11 @@ elif headless == 'ec2':
     pass
 else:
     chrome_options.add_argument("--start-maximized")
-with_exp = 'validate_with_xg.csv'
-without_exp = 'validate_without_xg.csv'
+with_exp = 'validate1_with_xg.csv'
+without_exp = 'validate1_without_xg.csv'
 match_records = []
 url = ''
-start = datetime(2022, 4, 15)
+start = datetime(2022, 5, 20)
 date = start
 # max_retries = 3
 num_of_retries = 0
