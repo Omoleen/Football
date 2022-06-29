@@ -9,8 +9,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 
 ser = Service(executable_path="C:\chromedriver.exe")
-headless = 'ec2'
-ec2 = True
+headless = True
+ec2 = False
 chrome_options = webdriver.ChromeOptions()
 # chrome_options.add_argument("--headless")
 if ec2:
@@ -29,17 +29,17 @@ elif headless == 'ec2':
     pass
 else:
     chrome_options.add_argument("--start-maximized")
-with_exp = 'train_with_xg.csv'
-without_exp = 'train_without_xg.csv'
+with_exp = 'validate1_with_xg.csv'
+without_exp = 'validate1_without_xg.csv'
 match_records = []
 url = ''
-start = datetime(2021, 4, 30)
-# start = datetime(2022, 4, 14)
+# start = datetime(2021, 4, 30)
+start = datetime(2022, 4, 14)
 date = start
 # max_retries = 3
 num_of_retries = 0
 max_time = 20
-for i in range(349):
+for i in range(70):
     month = ''
     day = ''
     date = date + relativedelta(days=1)
