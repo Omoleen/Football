@@ -34,12 +34,12 @@ without_exp = 'validate1_without_xg.csv'
 match_records = []
 url = ''
 # start = datetime(2021, 4, 30)
-start = datetime(2022, 4, 14)
+start = datetime(2022, 4, 18)
 date = start
 # max_retries = 3
 num_of_retries = 0
 max_time = 20
-for i in range(70):
+for i in range(66):
     month = ''
     day = ''
     date = date + relativedelta(days=1)
@@ -74,11 +74,11 @@ for i in range(70):
             soup = BeautifulSoup(h, 'lxml')
             all_matches = soup.find_all('div', {'data-v-7de836c4': '', 'class': 'card m-1 py-1 ft-game-bg'})
             all_matches = [match.get('id') for match in all_matches]
-            if set(total_ids).intersection(set(all_matches)):
+            if set(all_matches).issubset(set(total_ids)):
                 container.send_keys(Keys.END)
                 num_of_scrolls += 1
                 print(num_of_scrolls)
-                if num_of_scrolls > 4:
+                if num_of_scrolls > 2:
                     break
             else:
                 num_of_scrolls = 0

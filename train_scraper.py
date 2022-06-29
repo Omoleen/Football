@@ -33,7 +33,7 @@ with_exp = 'train_with_xg.csv'
 without_exp = 'train_without_xg.csv'
 match_records = []
 url = ''
-start = datetime(2021, 4, 30)
+start = datetime(2021, 5, 2)
 # start = datetime(2022, 4, 14)
 date = start
 # max_retries = 3
@@ -74,11 +74,11 @@ for i in range(349):
             soup = BeautifulSoup(h, 'lxml')
             all_matches = soup.find_all('div', {'data-v-7de836c4': '', 'class': 'card m-1 py-1 ft-game-bg'})
             all_matches = [match.get('id') for match in all_matches]
-            if set(total_ids).intersection(set(all_matches)):
+            if set(all_matches).issubset(set(total_ids)):
                 container.send_keys(Keys.END)
                 num_of_scrolls += 1
                 print(num_of_scrolls)
-                if num_of_scrolls > 4:
+                if num_of_scrolls > 3:
                     break
             else:
                 num_of_scrolls = 0
