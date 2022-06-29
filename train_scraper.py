@@ -6,6 +6,7 @@ from dateutil.relativedelta import relativedelta
 from bs4 import BeautifulSoup
 import time
 from selenium.webdriver.chrome.service import Service
+from selenium.webdriver.common.keys import Keys
 
 ser = Service(executable_path="C:\chromedriver.exe")
 headless = False
@@ -61,13 +62,27 @@ for i in range(349):
     try:
         driver.get(url)
         time.sleep(max_time)
-        h = driver.execute_script("return document.body.innerHTML")
-        soup = BeautifulSoup(h, 'lxml')
-        # print(h)
-        # driver.close()
-        # match_list = soup.find('div', {'id': 'match-list'})
-        all_matches = soup.find_all('div', {'data-v-7de836c4': '', 'class': 'card m-1 py-1 ft-game-bg'})
-        all_matches = [match.get('id') for match in all_matches]
+        total_ids = []
+        container = driver.find_element(By.CSS_SELECTOR, '#content-container > div.filters > div > ul > li > button')
+        container.click()
+        while True:
+            container.send_keys(Keys.END)
+            time.sleep(3)
+            h = driver.execute_script("return document.body.innerHTML")
+            soup = BeautifulSoup(h, 'lxml')
+            all_matches = soup.find_all('div', {'data-v-7de836c4': '', 'class': 'card m-1 py-1 ft-game-bg'})
+            all_matches = [match.get('id') for match in all_matches]
+            if set(total_ids).intersection(set(all_matches)):
+                break
+            else:
+                total_ids.clear()
+                for game_id in all_matches:
+                    total_ids.append(game_id)
+        top = driver.find_element(By.XPATH, '//*[@id="back-top"]')
+        top.click()
+        time.sleep(1)
+
+
         print(len(all_matches))
         # driver.get(url)
 
@@ -861,7 +876,7 @@ for i in range(349):
                                     'team_a_75_ft' : float(soup.select_one('#sidebar-scroll > div > div:nth-child(28) > div:nth-child(1) > div > span').text.replace(' ', '').replace('%', '').replace('\n', ''))/100,
                                     'team_b_75_ft' : float(soup.select_one('#sidebar-scroll > div > div:nth-child(28) > div:nth-child(3) > div > span').text.replace(' ', '').replace('%', '').replace('\n', ''))/100,
                                 }
-                                print(extras)
+                                # print(extras)
                                 #sidebar-scroll > div > div:nth-child(13) > div.pb-1.w-40 > p
                                 #sidebar-scroll > div > div:nth-child(50) > div.pb-1.w-40 > p
                                 if 'game corners' in soup.select_one('#sidebar-scroll > div > div:nth-child(50) > div.pb-1.w-40 > p').text:  # if the game corners minute box is there
@@ -1180,7 +1195,7 @@ for i in range(349):
                                         match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                     # match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
                                     # match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
-                                print(match_stats)
+                                # print(match_stats)
                                 match_records.append(match_stats)
                                 match_stats_with = {}
                                 match_stats_with.update(match_stats)
