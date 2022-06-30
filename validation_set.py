@@ -112,7 +112,7 @@ for i in range(66):
                     # max_time = 15
                     num_of_retries = 0
 
-                    print(team_a_name, ' - ', team_b_name)
+                    print(f'{date.year}-{month}-{day}: ', team_a_name, ' - ', team_b_name)
                     # each_match = each_match.find_element(By.CLASS_NAME, 'text-center text-dark font-weight-bolder')
                     if 'U21' in team_a_name or 'U21' in team_b_name or 'women' in team_a_name.lower() or 'women' in team_b_name.lower() or 'U19' in team_a_name \
                             or 'U19' in team_b_name or 'U20' in team_a_name or 'U20' in team_b_name \

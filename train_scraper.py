@@ -9,8 +9,8 @@ from selenium.webdriver.chrome.service import Service
 from selenium.webdriver.common.keys import Keys
 
 ser = Service(executable_path="C:\chromedriver.exe")
-headless = 'ec2'
-ec2 = True
+headless = True
+ec2 = False
 chrome_options = webdriver.ChromeOptions()
 # chrome_options.add_argument("--headless")
 if ec2:
@@ -29,11 +29,11 @@ elif headless == 'ec2':
     pass
 else:
     chrome_options.add_argument("--start-maximized")
-with_exp = 'train_with_xg.csv'
-without_exp = 'train_without_xg.csv'
+with_exp = 'train1_with_xg.csv'
+without_exp = 'train1_without_xg.csv'
 match_records = []
 url = ''
-start = datetime(2021, 5, 2)
+start = datetime(2021, 4, 30)
 # start = datetime(2022, 4, 14)
 date = start
 # max_retries = 3
@@ -63,13 +63,15 @@ for i in range(349):
         driver.get(url)
         time.sleep(max_time)
         total_ids = []
-        container = driver.find_element(By.CSS_SELECTOR, '#content-container > div.filters > div > ul > li > button')
-        container.click()
+
         num_of_scrolls = 0
         while True:
+            container = driver.find_element(By.CSS_SELECTOR, '#content-container > div.filters > div > ul > li > button')
+            container.click()
             time.sleep(3)
             container.send_keys(Keys.END)
-            print('sleeping')
+            # print('sleeping')
+            time.sleep(1)
             h = driver.execute_script("return document.body.innerHTML")
             soup = BeautifulSoup(h, 'lxml')
             all_matches = soup.find_all('div', {'data-v-7de836c4': '', 'class': 'card m-1 py-1 ft-game-bg'})
@@ -78,7 +80,7 @@ for i in range(349):
                 container.send_keys(Keys.END)
                 num_of_scrolls += 1
                 print(num_of_scrolls)
-                if num_of_scrolls > 3:
+                if num_of_scrolls > 2:
                     break
             else:
                 num_of_scrolls = 0
@@ -86,6 +88,7 @@ for i in range(349):
                 total_ids.clear()
                 for game_id in all_matches:
                     total_ids.append(game_id)
+            print('Loading more matches...')
         top = driver.find_element(By.XPATH, '//*[@id="back-top"]')
         top.click()
         time.sleep(2)
@@ -112,7 +115,8 @@ for i in range(349):
                     # max_time = 15
                     num_of_retries = 0
 
-                    print(team_a_name, ' - ', team_b_name)
+                    print(f'{date.year}-{month}-{day}: ', team_a_name, ' - ', team_b_name)
+
                     # each_match = each_match.find_element(By.CLASS_NAME, 'text-center text-dark font-weight-bolder')
                     if 'U21' in team_a_name or 'U21' in team_b_name or 'women' in team_a_name.lower() or 'women' in team_b_name.lower() or 'U19' in team_a_name \
                             or 'U19' in team_b_name or 'U20' in team_a_name or 'U20' in team_b_name \
@@ -126,9 +130,11 @@ for i in range(349):
                             if attempts == 1:
                                 each_match.click()
                                 time.sleep(4)
+                                print('clicked')
                             else:
                                 time.sleep(1)
-                            print('clicked')
+                                print('Retrying...')
+
 
                             soup = BeautifulSoup(driver.page_source, 'lxml')
                             # match_list = soup.find('div', {'class': 'sidebar sidebar-content overflow-sidebar'})
@@ -1463,6 +1469,7 @@ for i in range(349):
                     if attempts >= 3:
                         break
                     print(e)
+        # driver.quit()
         driver.close()
     except Exception as e:
         print(e)
@@ -1471,6 +1478,7 @@ for i in range(349):
         print(f'Scrape {date} again')
         date = date + relativedelta(days=-1)
         print(f'number of tries: {num_of_retries}')
+        # driver.quit()
         driver.close()
         if num_of_retries == 4:
             break
