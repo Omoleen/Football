@@ -29,18 +29,18 @@ elif headless == 'ec2':
     pass
 else:
     chrome_options.add_argument("--start-maximized")
-with_exp = 'validate1_with_xg.csv'
-without_exp = 'validate1_without_xg.csv'
+with_exp = 'train1_with_xg_10.csv'
+without_exp = 'train1_without_xg_10.csv'
 match_records = []
 url = ''
 # start = datetime(2021, 4, 30)
-# start = datetime(2022, 4, 18)
-start = datetime(2022, 4, 25)
+start = datetime(2021, 8, 29)
+# start = datetime(2022, 4, 14)
 date = start
 # max_retries = 3
 num_of_retries = 0
 max_time = 20
-for i in range(60):
+for i in range(41):
     month = ''
     day = ''
     date = date + relativedelta(days=1)
@@ -70,7 +70,8 @@ for i in range(60):
         while True:
             time.sleep(3)
             container.send_keys(Keys.END)
-            print('sleeping')
+            # print('sleeping')
+            time.sleep(1)
             h = driver.execute_script("return document.body.innerHTML")
             soup = BeautifulSoup(h, 'lxml')
             all_matches = soup.find_all('div', {'data-v-7de836c4': '', 'class': 'card m-1 py-1 ft-game-bg'})
@@ -87,17 +88,30 @@ for i in range(60):
                 total_ids.clear()
                 for game_id in all_matches:
                     total_ids.append(game_id)
-        top = driver.find_element(By.XPATH, '//*[@id="back-top"]')
-        top.click()
+            print('Loading more matches...')
+        driver.find_element(By.XPATH, '//*[@id="back-top"]').click()
         time.sleep(2)
         print(len(all_matches))
         # driver.get(url)
+        driver.find_element(By.XPATH, '//*[@id="content-container"]/section/div[2]/div[1]/ul/li[2]/button').click()
+        time.sleep(1)
+        driver.find_element(By.XPATH, '//*[@id="select-games"]').click()
+        time.sleep(.5)
+        driver.find_element(By.XPATH, '//*[@id="select-games"]/option[2]').click()
+        time.sleep(.5)
+        driver.find_element(By.XPATH, '//*[@id="filter-type"]').click()
+        time.sleep(.5)
+        driver.find_element(By.XPATH, '//*[@id="filter-type"]/option[2]').click()
+        time.sleep(.5)
+        driver.find_element(By.XPATH, '//*[@id="settings-modal"]/div/div/div[1]/button/i').click()
+        time.sleep(1.5)
+
 
         for match in all_matches:
             attempts = 1
             while True:
                 try:
-                    each_match = driver.find_element(By.XPATH, f'//*[@id="{match}"]/table/tbody/tr[2]/td[5]')
+                    each_match = driver.find_element(By.XPATH, f'//*[@id="{match}"]/table/tbody/tr[2]/td[4]')
                     team_a_num_matches = int(driver.find_element(By.XPATH, f'//*[@id="{match}"]/table/tbody/tr[1]/td[2]/div/span[1]').text)
                     team_b_num_matches = int(driver.find_element(By.XPATH, f'//*[@id="{match}"]/table/tbody/tr[3]/td[2]/div/span[1]').text)
                     team_a_pos_list = driver.find_element(By.XPATH, f'//*[@id="{match}"]/table/tbody/tr[1]/td[2]/div/span[2]').text.split('/')
@@ -114,6 +128,7 @@ for i in range(60):
                     num_of_retries = 0
 
                     print(f'{date.year}-{month}-{day}: ', team_a_name, ' - ', team_b_name)
+
                     # each_match = each_match.find_element(By.CLASS_NAME, 'text-center text-dark font-weight-bolder')
                     if 'U21' in team_a_name or 'U21' in team_b_name or 'women' in team_a_name.lower() or 'women' in team_b_name.lower() or 'U19' in team_a_name \
                             or 'U19' in team_b_name or 'U20' in team_a_name or 'U20' in team_b_name \
@@ -123,7 +138,7 @@ for i in range(60):
                             or 'ladies' in team_a_name.lower() or 'ladies' in team_b_name.lower():
                         pass
                     else:
-                        if team_b_num_matches and team_a_num_matches == 5:
+                        if team_b_num_matches and team_a_num_matches > 7:
                             if attempts == 1:
                                 each_match.click()
                                 time.sleep(4)
@@ -131,6 +146,7 @@ for i in range(60):
                             else:
                                 time.sleep(1)
                                 print('Retrying...')
+
 
                             soup = BeautifulSoup(driver.page_source, 'lxml')
                             # match_list = soup.find('div', {'class': 'sidebar sidebar-content overflow-sidebar'})
@@ -168,6 +184,7 @@ for i in range(60):
                                     # team_b_75_ft = float(soup.select_one('#sidebar-scroll > div > div:nth-child(29) > div:nth-child(3) > div > span').text.replace(' ', '').replace('%', '').replace('\n', ''))/100
                                     if 'game corners' in soup.select_one('#sidebar-scroll > div > div:nth-child(51) > div.pb-1.w-40 > p').text:  # if the game corners minute box is there
                                         match_stats = {
+                                            'date': f'{date.year}-{month}-{day}',
                                             'team_a_name': team_a_name,
                                             'team_b_name': team_b_name,
                                             'team_a_pos': team_a_pos,
@@ -299,20 +316,52 @@ for i in range(60):
                                         match_stats_btn.click()
                                         time.sleep(3)
                                         # int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                         match_stats_btn_fh = driver.find_element(By.XPATH, f'//*[@id="fh-live-stats-btn"]')
                                         match_stats_btn_fh.click()
                                         time.sleep(3)
-                                        match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        # match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        # match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                         match_stats_btn_sh = driver.find_element(By.XPATH, f'//*[@id="sh-live-stats-btn"]')
                                         match_stats_btn_sh.click()
                                         time.sleep(3)
-                                        match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        driver.find_element(By.XPATH, '//*[@id="odds-btn"]').click()
+                                        time.sleep(3)
+                                        match_stats['odds_team_a'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[1]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['odds_draw'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[2]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['odds_team_b'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[3]/p[2]').text.replace(' ', '').replace('\n', ''))
                                     else:
                                         match_stats = {
+                                            'date': f'{date.year}-{month}-{day}',
                                             'team_a_name': team_a_name,
                                             'team_b_name': team_b_name,
                                             'team_a_pos': team_a_pos,
@@ -444,19 +493,49 @@ for i in range(60):
                                         match_stats_btn.click()
                                         time.sleep(3)
                                         # int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                         match_stats_btn_fh = driver.find_element(By.XPATH, f'//*[@id="fh-live-stats-btn"]')
                                         match_stats_btn_fh.click()
                                         time.sleep(3)
-                                        match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        # match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        # match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                         match_stats_btn_sh = driver.find_element(By.XPATH, f'//*[@id="sh-live-stats-btn"]')
                                         match_stats_btn_sh.click()
                                         time.sleep(3)
-                                        match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
-
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        driver.find_element(By.XPATH, '//*[@id="odds-btn"]').click()
+                                        time.sleep(3)
+                                        match_stats['odds_team_a'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[1]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['odds_draw'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[2]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['odds_team_b'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[3]/p[2]').text.replace(' ', '').replace('\n', ''))
                                     match_records.append(match_stats)
                                     match_stats_with = {}
                                     match_stats_with.update(match_stats)
@@ -526,6 +605,7 @@ for i in range(60):
                                 else:  # if referee is available but no xG
                                     if 'game corners' in soup.select_one('#sidebar-scroll > div > div:nth-child(49) > div.pb-1.w-40 > p').text:
                                         match_stats = {
+                                            'date': f'{date.year}-{month}-{day}',
                                             'team_a_name': team_a_name,
                                             'team_b_name': team_b_name,
                                             'team_a_pos': team_a_pos,
@@ -671,20 +751,52 @@ for i in range(60):
                                         time.sleep(3)
                                         #sidebar-scroll > div > div:nth-child(11) > div:nth-child(1) > div > span
                                         # int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                         match_stats_btn_fh = driver.find_element(By.XPATH, f'//*[@id="fh-live-stats-btn"]')
                                         match_stats_btn_fh.click()
                                         time.sleep(3)
-                                        match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        # match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        # match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                         match_stats_btn_sh = driver.find_element(By.XPATH, f'//*[@id="sh-live-stats-btn"]')
                                         match_stats_btn_sh.click()
                                         time.sleep(3)
-                                        match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        driver.find_element(By.XPATH, '//*[@id="odds-btn"]').click()
+                                        time.sleep(3)
+                                        match_stats['odds_team_a'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[1]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['odds_draw'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[2]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['odds_team_b'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[3]/p[2]').text.replace(' ', '').replace('\n', ''))
                                     else:
                                         match_stats = {
+                                            'date': f'{date.year}-{month}-{day}',
                                             'team_a_name': team_a_name,
                                             'team_b_name': team_b_name,
                                             'team_a_pos': team_a_pos,
@@ -834,20 +946,46 @@ for i in range(60):
                                         time.sleep(3)
                                         #sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span
                                         # int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                         match_stats_btn_fh = driver.find_element(By.XPATH, f'//*[@id="fh-live-stats-btn"]')
                                         match_stats_btn_fh.click()
                                         time.sleep(3)
-                                        match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        # match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        # match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                         match_stats_btn_sh = driver.find_element(By.XPATH, f'//*[@id="sh-live-stats-btn"]')
                                         match_stats_btn_sh.click()
                                         time.sleep(3)
-                                        match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
-
-
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        driver.find_element(By.XPATH, '//*[@id="odds-btn"]').click()
+                                        time.sleep(3)
+                                        match_stats['odds_team_a'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[1]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['odds_draw'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[2]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['odds_team_b'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[3]/p[2]').text.replace(' ', '').replace('\n', ''))
                                     match_records.append(match_stats)
                                     match_stats = [match_stats]
                                     print(len(match_records))
@@ -897,6 +1035,7 @@ for i in range(60):
                                     #sidebar-scroll > div > div:nth-child(50) > div.pb-1.w-40 > p
                                     if 'game corners' in soup.select_one('#sidebar-scroll > div > div:nth-child(50) > div.pb-1.w-40 > p').text:  # if the game corners minute box is there
                                         match_stats = {
+                                            'date': f'{date.year}-{month}-{day}',
                                             'team_a_name': team_a_name,
                                             'team_b_name': team_b_name,
                                             'team_a_pos': team_a_pos,
@@ -1029,20 +1168,49 @@ for i in range(60):
                                         time.sleep(3)
                                         #sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span
                                         # int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                         match_stats_btn_fh = driver.find_element(By.XPATH, f'//*[@id="fh-live-stats-btn"]')
                                         match_stats_btn_fh.click()
                                         time.sleep(3)
-                                        match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        # match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        # match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                         match_stats_btn_sh = driver.find_element(By.XPATH, f'//*[@id="sh-live-stats-btn"]')
                                         match_stats_btn_sh.click()
                                         time.sleep(3)
-                                        match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                        match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                            match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                            match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        driver.find_element(By.XPATH, '//*[@id="odds-btn"]').click()
+                                        time.sleep(3)
+                                        match_stats['odds_team_a'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[1]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['odds_draw'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[2]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['odds_team_b'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[3]/p[2]').text.replace(' ', '').replace('\n', ''))
                                     else:
                                         match_stats = {
+                                            'date': f'{date.year}-{month}-{day}',
                                             'team_a_name': team_a_name,
                                             'team_b_name': team_b_name,
                                             'team_a_pos': team_a_pos,
@@ -1211,6 +1379,11 @@ for i in range(60):
                                             match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                         # match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
                                         # match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        driver.find_element(By.XPATH, '//*[@id="odds-btn"]').click()
+                                        time.sleep(3)
+                                        match_stats['odds_team_a'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[1]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['odds_draw'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[2]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['odds_team_b'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[3]/p[2]').text.replace(' ', '').replace('\n', ''))
                                     # print(match_stats)
                                     match_records.append(match_stats)
                                     match_stats_with = {}
@@ -1280,6 +1453,7 @@ for i in range(60):
                                     print(f'Record saved')
                                 else:  # no xG stat
                                     match_stats = {
+                                        'date': f'{date.year}-{month}-{day}',
                                         'team_a_name': team_a_name,
                                         'team_b_name': team_b_name,
                                         'team_a_pos': team_a_pos,
@@ -1427,24 +1601,48 @@ for i in range(60):
                                     time.sleep(3)
                                     #sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span
                                     # int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(11) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                    match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                    match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                    if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                        match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                    elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                        match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                    elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                        match_stats['team_a_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['team_b_corners_result'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                     match_stats_btn_fh = driver.find_element(By.XPATH, f'//*[@id="fh-live-stats-btn"]')
                                     match_stats_btn_fh.click()
                                     time.sleep(3)
-                                    #sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span
-                                    match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                    match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                    if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                        match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                    elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                        match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                    elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                        match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                    # match_stats['team_a_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                    # match_stats['team_b_corners_result_fh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
                                     match_stats_btn_sh = driver.find_element(By.XPATH, f'//*[@id="sh-live-stats-btn"]')
                                     match_stats_btn_sh.click()
                                     time.sleep(3)
-                                    #sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span
-                                    match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
-                                    match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
-
+                                    if 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div.pb-1.w-60 > p').text:
+                                        match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(10) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                    elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div.pb-1.w-60 > p').text:
+                                        match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(9) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                    elif 'Corners' in driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div.pb-1.w-60 > p').text:
+                                        match_stats['team_a_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(1) > div > span').text.replace(' ', '').replace('\n', ''))
+                                        match_stats['team_b_corners_result_sh'] = int(driver.find_element(By.CSS_SELECTOR, f'#sidebar-scroll > div > div:nth-child(8) > div:nth-child(3) > div > span').text.replace(' ', '').replace('\n', ''))
+                                    driver.find_element(By.XPATH, '//*[@id="odds-btn"]').click()
+                                    time.sleep(3)
+                                    match_stats['odds_team_a'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[1]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                    match_stats['odds_draw'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[2]/p[2]').text.replace(' ', '').replace('\n', ''))
+                                    match_stats['odds_team_b'] = float(driver.find_element(By.XPATH, '//*[@id="sidebar-scroll"]/div/div[2]/div[3]/p[2]').text.replace(' ', '').replace('\n', ''))
                                     match_records.append(match_stats)
                                     match_stats = [match_stats]
-
 
                                     try:
                                         existing_without_df = pd.read_csv(without_exp)
@@ -1465,6 +1663,7 @@ for i in range(60):
                     if attempts >= 3:
                         break
                     print(e)
+        # driver.quit()
         driver.close()
     except Exception as e:
         print(e)
@@ -1473,6 +1672,8 @@ for i in range(60):
         print(f'Scrape {date} again')
         date = date + relativedelta(days=-1)
         print(f'number of tries: {num_of_retries}')
+        # driver.quit()
+        driver.close()
         time.sleep(120)
         if num_of_retries == 1000:
             break

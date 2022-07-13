@@ -29,14 +29,20 @@ def evaluate_model(model, x_test, y_test):
     prec = metrics.precision_score(y_test, y_pred)
     rec = metrics.recall_score(y_test, y_pred)
     f1 = metrics.f1_score(y_test, y_pred)
+    # research on f0.5
+
     kappa = metrics.cohen_kappa_score(y_test, y_pred)
     clas = metrics.classification_report(y_test, y_pred)
     mcc = metrics.matthews_corrcoef(y_test, y_pred)
 
+
     # Calculate area under curve (AUC)
     y_pred_proba = model.predict_proba(x_test)[::,1]
     fpr, tpr, _ = metrics.roc_curve(y_test, y_pred_proba)
-    auc = metrics.roc_auc_score(y_test, y_pred_proba)
+    auc = metrics.roc_auc_score(y_test, y_pred_proba)  # when both classes are important
+
+    # Precision recall AUC curve
+    prauc = metrics.average_precision_score(y_test, y_pred_proba)  # when the positive class is the most important
     # optimal_idx = np.argmax(tpr-fpr)
     # optimal_threshold = _[optimal_idx]
     # print(f'Optimal threshold value is : {optimal_threshold}')
@@ -47,7 +53,7 @@ def evaluate_model(model, x_test, y_test):
     while threshold_value <= .8:
         temp_thresh = threshold_value
         predicted = (y_pred_proba >= temp_thresh).astype('int')
-        temp_roc = metrics.matthews_corrcoef(y_test, predicted)
+        temp_roc = metrics.average_precision_score(y_test, predicted)
         # print(f'Threshold {temp_thresh} -- {temp_roc}')
         if roc_score < temp_roc:
             roc_score = temp_roc
@@ -77,7 +83,7 @@ df.drop(['team_a_name', 'team_b_name', 'team_a_ft_result', 'team_b_ft_result', '
          'team_a_corners_result_fh', 'team_b_corners_result_fh', 'team_a_corners_result_sh', 'team_b_corners_result_sh'], axis=1, inplace=True)
 print(df.describe())
 # print(df.isnull().sum())
-num_cols = df.columns
+num_cols = df.columns  # remove total column
 df_ready = df.copy()
 scaler = RobustScaler()
 df_ready[num_cols] = scaler.fit_transform(df[num_cols])
